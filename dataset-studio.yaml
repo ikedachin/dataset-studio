@@ -1,0 +1,2 @@
+# Relative paths are resolved from the directory containing this file.
+data_dir: .

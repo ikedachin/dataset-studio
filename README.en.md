@@ -46,6 +46,7 @@ Available options:
 ```bash
 uv run dataset-studio --host 127.0.0.1 --port 8765 --no-browser
 uv run dataset-studio --data-dir /path/to/private/workspace
+uv run dataset-studio --config /path/to/dataset-studio.yaml
 ```
 
 | Option | Description |
@@ -54,8 +55,9 @@ uv run dataset-studio --data-dir /path/to/private/workspace
 | `--port` | Port to listen on. Defaults to `8765` |
 | `--no-browser` | Do not open a browser automatically at startup |
 | `--data-dir` | Explicitly specify where the SQLite database and other internal data are stored |
+| `--config` | Specify the YAML configuration file to load |
 
-By default, Dataset Studio stores its SQLite database and other internal data in the current working directory from which it is started. If you run `uv run dataset-studio` from the repository root as shown above, the database is stored at:
+By default, Dataset Studio automatically loads `dataset-studio.yaml` or `dataset-studio.yml` from the current working directory. The [dataset-studio.yaml](dataset-studio.yaml) included in this repository sets `data_dir: .`, so running `uv run dataset-studio` from the repository root stores the database at:
 
 ```text
 ./dataset-studio.sqlite3
@@ -63,7 +65,27 @@ By default, Dataset Studio stores its SQLite database and other internal data in
 
 Because the database uses WAL mode, `dataset-studio.sqlite3-wal` and `dataset-studio.sqlite3-shm` may appear in the same directory while Dataset Studio is running. These database files are excluded from Git.
 
-Starting Dataset Studio from another directory uses that directory as the default storage location. To use a fixed location instead, specify `--data-dir`.
+To change the storage location, edit the YAML file as follows:
+
+```yaml
+data_dir: ./data
+```
+
+A relative path is resolved from the directory containing the YAML file. Absolute paths and paths beginning with `~` are also supported.
+
+```yaml
+# macOS / Linux example
+data_dir: ~/dataset-studio-data
+```
+
+```yaml
+# Windows example
+data_dir: 'C:\Users\your-name\dataset-studio-data'
+```
+
+Storage location precedence is `--data-dir`, YAML `data_dir`, then the current working directory. When `--config` is provided, Dataset Studio loads that YAML file.
+
+If no YAML file exists and Dataset Studio is started from another directory, that directory is used for storage.
 
 ## Basic Usage
 

@@ -46,6 +46,7 @@ uv run dataset-studio
 ```bash
 uv run dataset-studio --host 127.0.0.1 --port 8765 --no-browser
 uv run dataset-studio --data-dir /path/to/private/workspace
+uv run dataset-studio --config /path/to/dataset-studio.yaml
 ```
 
 | オプション | 説明 |
@@ -54,8 +55,9 @@ uv run dataset-studio --data-dir /path/to/private/workspace
 | `--port` | Listenするポート。デフォルトは`8765` |
 | `--no-browser` | 起動時にブラウザを自動で開かない |
 | `--data-dir` | SQLite DBなどの保存先を明示的に指定する |
+| `--config` | 読み込むYAML設定ファイルを指定する |
 
-デフォルトでは、SQLite DBなどの内部データはDataset Studioを起動したカレントディレクトリへ保存されます。上記の手順どおりリポジトリ直下で`uv run dataset-studio`を実行した場合、DBの保存先は次のとおりです。
+デフォルトでは、起動したカレントディレクトリにある`dataset-studio.yaml`または`dataset-studio.yml`を自動的に読み込みます。このリポジトリの[dataset-studio.yaml](dataset-studio.yaml)では`data_dir: .`を指定しているため、リポジトリ直下で`uv run dataset-studio`を実行した場合、DBの保存先は次のとおりです。
 
 ```text
 ./dataset-studio.sqlite3
@@ -63,7 +65,27 @@ uv run dataset-studio --data-dir /path/to/private/workspace
 
 WALモードで動作するため、起動中は同じ場所に`dataset-studio.sqlite3-wal`と`dataset-studio.sqlite3-shm`が作成されることがあります。これらのDB関連ファイルはGitの管理対象外です。
 
-別のディレクトリから起動すると、そのディレクトリがデフォルトの保存先になります。保存先を固定したい場合は`--data-dir`を指定してください。
+保存先を変更する場合は、YAMLを次のように編集します。
+
+```yaml
+data_dir: ./data
+```
+
+相対パスはYAMLファイルが置かれているディレクトリを基準に解決されます。絶対パスや`~`から始まるパスも指定できます。
+
+```yaml
+# macOS / Linuxの例
+data_dir: ~/dataset-studio-data
+```
+
+```yaml
+# Windowsの例
+data_dir: 'C:\Users\your-name\dataset-studio-data'
+```
+
+保存先の優先順位は、`--data-dir`、YAMLの`data_dir`、起動時のカレントディレクトリの順です。`--config`を指定した場合は、そのYAMLを読み込みます。
+
+YAMLがない状態で別のディレクトリから起動すると、そのディレクトリが保存先になります。
 
 ## 基本的な使い方
 

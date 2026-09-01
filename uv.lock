@@ -578,6 +578,7 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "jinja2" },
     { name = "python-multipart" },
+    { name = "pyyaml" },
     { name = "sqlalchemy" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -612,6 +613,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6" },
     { name = "python-multipart", specifier = ">=0.0.18" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9" },
     { name = "sqlalchemy", specifier = ">=2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
