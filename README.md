@@ -23,6 +23,8 @@ JSONLを専用のSQLite作業セッションへ読み込み、任意のネスト
 
 Python 3.11以上と[uv](https://docs.astral.sh/uv/)が必要です。
 
+フロントエンドのビルド済みファイルはリポジトリとPythonパッケージに含まれています。通常の利用者がNode.js、`npm install`、`npm run build`を実行する必要はありません。
+
 ```bash
 git clone <repository-url>
 cd dataset-studio
@@ -117,7 +119,11 @@ ikedachin/JaQuAD_imabari_v1
 
 ## フロントエンド開発
 
-通常の利用にはNode.jsは不要です。Node.jsが必要なのは、フロントエンドを開発または再ビルドする場合だけです。
+この章は、Dataset Studioのフロントエンド自体を変更する開発者向けです。通常のインストール・起動では、以下の操作は不要です。
+
+Node.jsが必要なのは、フロントエンドを開発または再ビルドする場合だけです。
+
+開発サーバーを起動する場合:
 
 ```bash
 cd frontend
@@ -127,13 +133,23 @@ npm run dev
 
 Viteの開発サーバーは、`/api`へのアクセスをポート`8765`で動作しているDataset Studioへproxyします。
 
-本番用フロントエンドをビルドし、Pythonパッケージ内へ配置する場合:
+フロントエンドを変更した後は、本番用ファイルを再生成します。
 
 ```bash
+cd frontend
+npm install
 npm run build
 ```
 
-生成物は`src/dataset_studio/static/`へ配置され、FastAPIから配信されます。
+`npm run build`の生成物は`src/dataset_studio/static/`へ配置され、FastAPIから配信されます。生成物はPythonだけで起動できる状態を維持するため、ソースコードと一緒に管理します。
+
+整理すると、利用目的ごとに必要なコマンドは次のとおりです。
+
+| 目的 | 必要なコマンド |
+| --- | --- |
+| Dataset Studioを利用する | `uv sync`、`uv run dataset-studio` |
+| React UIを開発する | `cd frontend`、`npm install`、`npm run dev` |
+| React UIの変更を本番用ファイルへ反映する | `cd frontend`、`npm run build` |
 
 ## 開発時の品質チェック
 

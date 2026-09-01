@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { DatasetRecord, DiffChange, JsonObject } from "../types";
+import { usePreferences } from "../i18n";
 
 const RawCodeEditor = lazy(() => import("./RawCodeEditor"));
 
@@ -12,6 +13,7 @@ export function SidePanel({
   diff: DiffChange[];
   onApplyRaw: (value: JsonObject) => void;
 }) {
+  const { t } = usePreferences();
   const [tab, setTab] = useState<"diff" | "validation" | "raw" | "metadata">(
     "diff",
   );
@@ -24,7 +26,7 @@ export function SidePanel({
   const parse = (): JsonObject => {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || Array.isArray(parsed) || typeof parsed !== "object")
-      throw new Error("Top level must be an object");
+      throw new Error(t("Top level must be an object"));
     return parsed as JsonObject;
   };
   const apply = () => {
@@ -32,7 +34,7 @@ export function SidePanel({
       onApplyRaw(parse());
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid JSON");
+      setError(e instanceof Error ? e.message : t("Invalid JSON"));
     }
   };
   const format = () => {
@@ -40,7 +42,7 @@ export function SidePanel({
       setRaw(JSON.stringify(parse(), null, 2));
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid JSON");
+      setError(e instanceof Error ? e.message : t("Invalid JSON"));
     }
   };
   return (
@@ -50,13 +52,13 @@ export function SidePanel({
           className={tab === "diff" ? "active" : ""}
           onClick={() => setTab("diff")}
         >
-          Diff
+          {t("Diff")}
         </button>
         <button
           className={tab === "validation" ? "active" : ""}
           onClick={() => setTab("validation")}
         >
-          Validate
+          {t("Validate")}
         </button>
         <button
           className={tab === "raw" ? "active" : ""}
@@ -68,14 +70,14 @@ export function SidePanel({
           className={tab === "metadata" ? "active" : ""}
           onClick={() => setTab("metadata")}
         >
-          Meta
+          {t("Meta")}
         </button>
       </div>
       <div className="side-content">
         {tab === "diff" && (
           <div data-testid="diff-panel">
             {diff.length === 0 ? (
-              <div className="empty-small">No changes</div>
+              <div className="empty-small">{t("No changes")}</div>
             ) : (
               diff.map((change, i) => (
                 <div className={`diff change-${change.kind}`} key={i}>
@@ -96,7 +98,7 @@ export function SidePanel({
           <div data-testid="validation-panel">
             <div className={`validation-summary ${record.validation_status}`}>
               {record.validation_status === "valid"
-                ? "✓ Valid"
+                ? t("✓ Valid")
                 : record.validation_status}
             </div>
             {record.validation_issues.map((issue, i) => (
@@ -110,27 +112,27 @@ export function SidePanel({
         )}
         {tab === "raw" && (
           <div className="raw-editor">
-            <Suspense fallback={<div className="empty-small">Loading JSON editor…</div>}>
+            <Suspense fallback={<div className="empty-small">{t("Loading JSON editor…")}</div>}>
               <RawCodeEditor value={raw} onChange={setRaw} />
             </Suspense>
             {error && <p className="error-text">{error}</p>}
             <div>
-              <button onClick={format}>Format</button>
+              <button onClick={format}>{t("Format")}</button>
               <button className="primary" onClick={apply}>
-                Apply
+                {t("Apply")}
               </button>
             </div>
           </div>
         )}
         {tab === "metadata" && (
           <dl className="metadata">
-            <dt>Record ID</dt>
+            <dt>{t("Record ID")}</dt>
             <dd>{record.id}</dd>
-            <dt>Position</dt>
+            <dt>{t("Position")}</dt>
             <dd>{record.position + 1}</dd>
-            <dt>Version</dt>
+            <dt>{t("Version")}</dt>
             <dd>{record.version}</dd>
-            <dt>Status</dt>
+            <dt>{t("Status")}</dt>
             <dd>{record.status}</dd>
           </dl>
         )}

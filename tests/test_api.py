@@ -78,6 +78,41 @@ def test_duplicate_identifier_and_required_validation(client, tmp_path: Path) ->
     assert "Duplicate identifier" in messages
 
 
+def test_configured_identifier_path_is_required(client, tmp_path: Path) -> None:
+    project, split = import_file(client, tmp_path, DATA)
+    client.patch(
+        f"/api/projects/{project}", json={"identifier_field": "item_id"}
+    )
+    record_id = client.get(f"/api/splits/{split}/records").json()["items"][0]["id"]
+    result = client.post(f"/api/records/{record_id}/validate").json()
+    assert {
+        "level": "error",
+        "path": "item_id",
+        "message": "Identifier field is missing",
+    } in result["issues"]
+
+
+def test_changing_identifier_revalidates_and_clears_stale_errors(
+    client, tmp_path: Path
+) -> None:
+    project, split = import_file(
+        client,
+        tmp_path,
+        '{"id":"duplicate","item_id":"one"}\n'
+        '{"id":"duplicate","item_id":"two"}\n',
+    )
+    first = client.post(f"/api/projects/{project}/validate").json()
+    assert first["error"] == 2
+    client.patch(
+        f"/api/projects/{project}", json={"identifier_field": "item_id"}
+    )
+    listing = client.get(f"/api/splits/{split}/records").json()
+    assert {record["validation_status"] for record in listing["items"]} == {"valid"}
+    for record in listing["items"]:
+        detail = client.get(f"/api/records/{record['id']}").json()
+        assert detail["validation_issues"] == []
+
+
 def test_messages_validation(client, tmp_path: Path) -> None:
     project, split = import_file(
         client, tmp_path, '{"messages":[{"role":"user","content":"hello"}]}\n'

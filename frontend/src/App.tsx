@@ -17,10 +17,12 @@ import { SidePanel } from "./components/SidePanel";
 import { ProjectTools } from "./components/ProjectTools";
 import { SyncDialog } from "./components/SyncDialog";
 import { useAutosave } from "./hooks/useAutosave";
+import { usePreferences } from "./i18n";
 import type { DatasetRecord, Json, JsonObject, Project } from "./types";
 import { shortcutAction } from "./utils/keyboard";
 
 export function App() {
+  const { t } = usePreferences();
   const client = useQueryClient();
   const [projectId, setProjectId] = useState<number>();
   const [splitId, setSplitId] = useState<number>();
@@ -131,7 +133,7 @@ export function App() {
   const mutateRefresh = useMutation({
     mutationFn: async (action: "add" | "delete" | "restore" | "duplicate") => {
       if (action === "add") return api.add(splitId!);
-      if (!recordId) throw new Error("No record selected");
+      if (!recordId) throw new Error(t("Select a record to begin editing."));
       if (action === "delete") return api.remove(recordId);
       if (action === "restore") return api.restore(recordId);
       return api.duplicate(recordId);
@@ -156,21 +158,21 @@ export function App() {
           await client.invalidateQueries({ queryKey: ["records", splitId] });
         } else if (job.status === "failed") {
           window.clearInterval(poll);
-          setNotice(job.error?.message ?? "Import failed");
+          setNotice(job.error?.message ?? t("Import failed"));
         }
       } catch (e) {
         window.clearInterval(poll);
-        setNotice(e instanceof Error ? e.message : "Import failed");
+        setNotice(e instanceof Error ? e.message : t("Import failed"));
       }
     }, 600);
   };
   const importFrom = async (mode: string) => {
     if (mode === "local") {
-      const path = prompt("Absolute path to .jsonl or .ndjson");
+      const path = prompt(t("Absolute path to .jsonl or .ndjson"));
       if (!path) return;
       const split =
         prompt(
-          "Split name",
+          t("Split name"),
           path
             .split("/")
             .pop()
@@ -210,7 +212,7 @@ export function App() {
   const saveToPath = async () => {
     if (!splitId) return;
     const path = prompt(
-      "Save edited JSONL to local path",
+      t("Save edited JSONL to local path"),
       `${project?.splits.find((s) => s.id === splitId)?.name ?? "dataset"}_edited.jsonl`,
     );
     if (!path) return;
@@ -223,13 +225,13 @@ export function App() {
       if (
         e instanceof ApiError &&
         e.status === 409 &&
-        confirm("That file exists. Replace it atomically?")
+        confirm(t("That file exists. Replace it atomically?"))
       ) {
         const result = await api.exportPath(splitId, path, true);
         setNotice(
           `Exported ${result.records.toLocaleString()} records to ${result.path}`,
         );
-      } else setNotice(e instanceof Error ? e.message : "Export failed");
+      } else setNotice(e instanceof Error ? e.message : t("Export failed"));
     }
   };
   const navigate = async (direction: number) => {
@@ -252,7 +254,7 @@ export function App() {
     return () => window.removeEventListener("keydown", handle);
   });
   if (projects.isLoading)
-    return <div className="app-loading">Opening Dataset Studio…</div>;
+    return <div className="app-loading">{t("Opening Dataset Studio…")}</div>;
   if (!projects.data?.length)
     return (
       <>
@@ -305,8 +307,8 @@ export function App() {
               ref={searchRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search every scalar value…"
-              aria-label="Search dataset"
+              placeholder={t("Search every scalar value…")}
+              aria-label={t("Search dataset")}
             />
             <kbd>⌘F</kbd>
           </div>
@@ -316,31 +318,31 @@ export function App() {
               setStatus(e.target.value);
               setPage(0);
             }}
-            aria-label="Status filter"
+            aria-label={t("Status filter")}
           >
-            <option value="all">All records</option>
-            <option value="unedited">Unedited</option>
-            <option value="edited">Edited</option>
-            <option value="new">New</option>
-            <option value="deleted">Deleted</option>
-            <option value="validation_error">Validation error</option>
+            <option value="all">{t("All records")}</option>
+            <option value="unedited">{t("Unedited")}</option>
+            <option value="edited">{t("Edited")}</option>
+            <option value="new">{t("New")}</option>
+            <option value="deleted">{t("Deleted")}</option>
+            <option value="validation_error">{t("Validation error")}</option>
           </select>
           <button
             className={filterOpen ? "active" : ""}
             onClick={() => setFilterOpen(!filterOpen)}
           >
-            Filter {filters.filter((f) => f.path).length || ""}
+            {t("Filter")} {filters.filter((f) => f.path).length || ""}
           </button>
           <button
-            title="Add record"
+            title={t("Add record")}
             onClick={() => mutateRefresh.mutate("add")}
           >
-            <FilePlus2 size={15} /> New record
+            <FilePlus2 size={15} /> {t("New record")}
           </button>
           <button
             onClick={() => document.getElementById("quick-upload")?.click()}
           >
-            <Upload size={15} /> Upload
+            <Upload size={15} /> {t("Upload")}
           </button>
           <input
             id="quick-upload"
@@ -352,7 +354,7 @@ export function App() {
               if (f) {
                 const name =
                   prompt(
-                    "Split name",
+                    t("Split name"),
                     f.name.replace(/\.(jsonl|ndjson)$/i, ""),
                   ) || "train";
                 watchJob((await api.upload(f, name, projectId)).job_id);
@@ -362,27 +364,34 @@ export function App() {
           <select
             className="import-select"
             defaultValue=""
-            aria-label="Other import source"
+            aria-label={t("Other import source")}
             onChange={(e) => {
               void importFrom(e.target.value).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : "Import failed"),
+                setNotice(
+                  error instanceof Error ? error.message : t("Import failed"),
+                ),
               );
               e.target.value = "";
             }}
           >
-            <option value="" disabled>Import…</option>
-            <option value="local">Local path</option>
+            <option value="" disabled>
+              {t("Import…")}
+            </option>
+            <option value="local">{t("Local path")}</option>
             <option value="hf">Hugging Face</option>
           </select>
-          <button onClick={() => void saveToPath()}>Save path</button>
+          <button onClick={() => void saveToPath()}>{t("Save path")}</button>
           <a
             className="button primary"
             href={splitId ? `/api/export/download?split_id=${splitId}` : "#"}
           >
-            <Download size={15} /> Download
+            <Download size={15} /> {t("Download")}
           </a>
           {(project?.splits.length ?? 0) > 1 && (
-            <a className="button" href={`/api/projects/${projectId}/export.zip`}>
+            <a
+              className="button"
+              href={`/api/projects/${projectId}/export.zip`}
+            >
               ZIP
             </a>
           )}
@@ -393,7 +402,7 @@ export function App() {
               <div className="filter-row" key={i}>
                 <input
                   list="schema-paths"
-                  placeholder="JSON path"
+                  placeholder={t("JSON path")}
                   value={f.path}
                   onChange={(e) =>
                     setFilters(
@@ -413,14 +422,14 @@ export function App() {
                     )
                   }
                 >
-                  <option value="contains">contains</option>
-                  <option value="not_contains">not contains</option>
-                  <option value="equals">equals</option>
-                  <option value="not_equals">not equals</option>
-                  <option value="exists">exists</option>
-                  <option value="missing">missing</option>
-                  <option value="empty">empty</option>
-                  <option value="not_empty">not empty</option>
+                  <option value="contains">{t("contains")}</option>
+                  <option value="not_contains">{t("not contains")}</option>
+                  <option value="equals">{t("equals")}</option>
+                  <option value="not_equals">{t("not equals")}</option>
+                  <option value="exists">{t("exists")}</option>
+                  <option value="missing">{t("missing")}</option>
+                  <option value="empty">{t("empty")}</option>
+                  <option value="not_empty">{t("not empty")}</option>
                   <option value="gt">&gt;</option>
                   <option value="gte">≥</option>
                   <option value="lt">&lt;</option>
@@ -430,7 +439,7 @@ export function App() {
                   f.operator,
                 ) && (
                   <input
-                    placeholder="Value"
+                    placeholder={t("Value")}
                     value={f.value}
                     onChange={(e) =>
                       setFilters(
@@ -463,22 +472,22 @@ export function App() {
                 ])
               }
             >
-              + AND filter
+              {t("+ AND filter")}
             </button>
             <div className="sort-controls">
-              <span>Sort</span>
+              <span>{t("Sort")}</span>
               <input
                 list="schema-paths"
                 value={sortPath}
                 onChange={(e) => setSortPath(e.target.value)}
-                placeholder="JSON path (original order)"
+                placeholder={t("JSON path (original order)")}
               />
               <select
                 value={sortDirection}
                 onChange={(e) => setSortDirection(e.target.value)}
               >
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
+                <option value="asc">{t("Ascending")}</option>
+                <option value="desc">{t("Descending")}</option>
               </select>
               <button
                 className="ghost"
@@ -487,7 +496,7 @@ export function App() {
                   setSortPath("");
                 }}
               >
-                Clear
+                {t("Clear")}
               </button>
             </div>
           </div>
@@ -496,7 +505,7 @@ export function App() {
       <div className="workspace">
         <aside className="records-panel">
           <div className="panel-title">
-            <span>RECORDS</span>
+            <span>{t("RECORDS")}</span>
             <b>{total.toLocaleString()}</b>
           </div>
           <RecordList
@@ -510,7 +519,7 @@ export function App() {
               ‹
             </button>
             <span>
-              Page {page + 1} / {Math.max(1, Math.ceil(total / 500))}
+              {t("Page")} {page + 1} / {Math.max(1, Math.ceil(total / 500))}
             </span>
             <button
               disabled={(page + 1) * 500 >= total}
@@ -526,19 +535,20 @@ export function App() {
               <div className="editor-head">
                 <div>
                   <p>
-                    RECORD {String(record.data.position + 1).padStart(6, "0")}
+                    {t("RECORD")}{" "}
+                    {String(record.data.position + 1).padStart(6, "0")}
                   </p>
                   <h2>
                     {record.data.status === "unedited"
-                      ? "Original record"
-                      : "Working copy"}
+                      ? t("Original record")
+                      : t("Working copy")}
                   </h2>
                 </div>
                 <div className="editor-actions">
                   <span
                     className={`save-state save-${autosave.state.replace("…", "").toLowerCase()}`}
                   >
-                    {autosave.state}
+                    {t(autosave.state)}
                   </span>
                   <button
                     onClick={() =>
@@ -549,16 +559,16 @@ export function App() {
                     className="ghost danger"
                   >
                     <Trash2 size={15} />
-                    {record.data.is_deleted ? "Undo delete" : "Delete"}
+                    {record.data.is_deleted ? t("Undo delete") : t("Delete")}
                   </button>
                   <button
                     className="ghost"
                     onClick={() => mutateRefresh.mutate("duplicate")}
                   >
-                    Duplicate
+                    {t("Duplicate")}
                   </button>
                   <button className="ghost" onClick={() => setSyncOpen(true)}>
-                    Sync
+                    {t("Sync")}
                   </button>
                   <button
                     className="ghost"
@@ -566,8 +576,8 @@ export function App() {
                       if (
                         confirm(
                           record.data.is_new
-                            ? "Cancel this new record?"
-                            : "Revert this record to its imported state?",
+                            ? t("Cancel this new record?")
+                            : t("Revert this record to its imported state?"),
                         )
                       )
                         mutateRefresh.mutate(
@@ -575,7 +585,7 @@ export function App() {
                         );
                     }}
                   >
-                    Revert
+                    {t("Revert")}
                   </button>
                 </div>
               </div>
@@ -593,12 +603,12 @@ export function App() {
                   onClick={() => void navigate(-1)}
                   disabled={currentIndex <= 0}
                 >
-                  ← Previous
+                  ← {t("Previous")}
                 </button>
                 <span>
                   <b>{page * 500 + currentIndex + 1}</b> /{" "}
                   {total.toLocaleString()}
-                  {search && " filtered"}
+                  {search && ` ${t("filtered")}`}
                 </span>
                 <button
                   onClick={() => void navigate(1)}
@@ -607,13 +617,13 @@ export function App() {
                     currentIndex >= (list.data?.items.length ?? 0) - 1
                   }
                 >
-                  Next →
+                  {t("Next")} →
                 </button>
               </div>
             </>
           ) : (
             <div className="empty-editor">
-              Select a record to begin editing.
+              {t("Select a record to begin editing.")}
             </div>
           )}
         </section>
@@ -628,28 +638,34 @@ export function App() {
       <footer className="statusbar">
         <span>{project?.name}</span>
         <span>{project?.splits.find((s) => s.id === splitId)?.name}</span>
-        <span>{total.toLocaleString()} records</span>
+        <span>
+          {total.toLocaleString()} {t("records")}
+        </span>
         <span>
           {record.data?.validation_status === "valid"
-            ? "✓ Validation OK"
-            : `Validation: ${record.data?.validation_status ?? "—"}`}
+            ? t("✓ Validation OK")
+            : `${t("Validation")}: ${record.data?.validation_status ?? "—"}`}
         </span>
-        <span className="push">{notice || autosave.state}</span>
+        <span className="push">{notice || t(autosave.state)}</span>
       </footer>
       {tools && project && (
         <ProjectTools
           project={project}
           onClose={() => setTools(false)}
-          onUpdated={(p) => {
+          onUpdated={(p, close = true) => {
             client.setQueryData<Project[]>(["projects"], (old) =>
               old?.map((x) => (x.id === p.id ? p : x)),
             );
-            setTools(false);
+            if (close) setTools(false);
           }}
           onDeleted={() => {
             void client.invalidateQueries({ queryKey: ["projects"] });
             setProjectId(undefined);
             setTools(false);
+          }}
+          onValidated={() => {
+            void client.invalidateQueries({ queryKey: ["records", splitId] });
+            void client.invalidateQueries({ queryKey: ["record", recordId] });
           }}
         />
       )}
@@ -683,6 +699,9 @@ function Header({
   onSettings?: () => void;
   children?: React.ReactNode;
 }) {
+  const { language, setLanguage, fontSize, setFontSize, t } = usePreferences();
+  const sizes = ["small", "medium", "large"] as const;
+  const sizeIndex = sizes.indexOf(fontSize);
   return (
     <header>
       <div className="brand">
@@ -708,10 +727,44 @@ function Header({
       )}
       {children}
       <div className="header-spacer" />
-      <button className="icon ghost" title="Settings" onClick={onSettings}>
+      <div className="display-controls" aria-label={t("Text size")}>
+        <button
+          className="icon ghost text-size-button"
+          title={t("Smaller text")}
+          aria-label={t("Smaller text")}
+          disabled={sizeIndex === 0}
+          onClick={() => setFontSize(sizes[sizeIndex - 1])}
+        >
+          A−
+        </button>
+        <button
+          className="icon ghost text-size-button"
+          title={t("Larger text")}
+          aria-label={t("Larger text")}
+          disabled={sizeIndex === sizes.length - 1}
+          onClick={() => setFontSize(sizes[sizeIndex + 1])}
+        >
+          A+
+        </button>
+      </div>
+      <div className="language-switch" aria-label="Language">
+        <button
+          className={language === "ja" ? "active" : ""}
+          onClick={() => setLanguage("ja")}
+        >
+          日本語
+        </button>
+        <button
+          className={language === "en" ? "active" : ""}
+          onClick={() => setLanguage("en")}
+        >
+          EN
+        </button>
+      </div>
+      <button className="icon ghost" title={t("Settings")} onClick={onSettings}>
         <Settings size={17} />
       </button>
-      <button className="icon ghost" title="More">
+      <button className="icon ghost" title={t("More")}>
         <MoreHorizontal size={18} />
       </button>
     </header>

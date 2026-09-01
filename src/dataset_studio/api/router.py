@@ -44,7 +44,7 @@ from dataset_studio.services.jsonl_importer import (
 )
 from dataset_studio.services.search_index import index_record
 from dataset_studio.services.sync_service import apply_sync
-from dataset_studio.services.validator import update_validation
+from dataset_studio.services.validator import update_validation, validate_records
 
 api_router = APIRouter(prefix="/api")
 DB = Annotated[Session, Depends(get_session)]
@@ -124,8 +124,20 @@ def get_project(project_id: int, session: DB) -> dict[str, Any]:
 @api_router.patch("/projects/{project_id}")
 def update_project(project_id: int, payload: ProjectSettings, session: DB) -> dict[str, Any]:
     project = get_or_404(session, Project, project_id)
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    validation_changed = any(
+        key in changes and getattr(project, key) != changes[key]
+        for key in ("identifier_field", "required_fields")
+    )
+    for key, value in changes.items():
         setattr(project, key, value)
+    if validation_changed:
+        records = session.scalars(
+            select(Record)
+            .join(Split)
+            .where(Split.project_id == project_id, Record.is_deleted.is_(False))
+        ).all()
+        validate_records(session, records, project)
     session.commit()
     return project_view(project)
 
@@ -392,15 +404,10 @@ def validate_project(project_id: int, session: DB) -> dict[str, Any]:
         select(Record)
         .join(Split)
         .where(Split.project_id == project_id, Record.is_deleted.is_(False))
-    ).yield_per(500)
-    counts = {"valid": 0, "warning": 0, "error": 0}
-    total = 0
-    for record in records:
-        update_validation(session, record, project)
-        counts[record.validation_status] += 1
-        total += 1
+    ).all()
+    counts = validate_records(session, records, project)
     session.commit()
-    return {"total": total, **counts}
+    return counts
 
 
 @api_router.post("/records/{record_id}/sync")

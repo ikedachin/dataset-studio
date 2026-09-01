@@ -6,8 +6,6 @@ __pycache__/
 .mypy_cache/
 frontend/node_modules/
 frontend/dist/
-src/dataset_studio/static/assets/
-src/dataset_studio/static/index.html
 *.sqlite3
 *.jsonl
-
+!dummy_data/*.jsonl
