@@ -1,0 +1,17 @@
+.toolbar-wrap { position: relative; z-index: 3; }
+.toolbar { height: 49px; }
+.toolbar button.active { border-color: var(--blue); color: #a9ccff; }
+.filter-builder { position: absolute; right: 190px; top: 45px; width: 660px; background: #151d28; border: 1px solid #34445a; border-radius: 7px; padding: 12px; box-shadow: 0 18px 60px #000c; }
+.filter-row { display: grid; grid-template-columns: 1fr 130px 1fr 30px; gap: 6px; margin-bottom: 6px; }
+.filter-row input, .filter-row select, .sort-controls input, .sort-controls select { min-width: 0; background: #0d131b; border: 1px solid var(--border); border-radius: 5px; padding: 6px; }
+.sort-controls { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; display: grid; grid-template-columns: auto 1fr 120px auto; align-items: center; gap: 7px; font-size: 10px; color: var(--muted); }
+.tools-modal { width: 680px; max-height: 86vh; overflow: auto; }
+.settings-section { border-top: 1px solid var(--border); padding-top: 14px; }
+.settings-title { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.sync-rule { display: grid; grid-template-columns: 1fr 20px 1fr 1.3fr 30px; gap: 5px; align-items: start; margin-top: 7px; }
+.sync-rule input, .sync-rule textarea { min-width: 0; background: #0d131b; border: 1px solid var(--border); border-radius: 5px; padding: 7px; font-size: 10px; }
+.sync-rule textarea { height: 34px; resize: vertical; }
+.sync-rule span { text-align: center; padding-top: 7px; color: var(--muted); }
+.modal-actions { display: grid; grid-template-columns: auto 1fr auto auto; gap: 7px; margin-top: 18px; }
+.result-note { color: var(--green); font-size: 11px; }
+.sync-preview { max-height: 50vh; overflow: auto; }

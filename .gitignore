@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+frontend/node_modules/
+frontend/dist/
+src/dataset_studio/static/assets/
+src/dataset_studio/static/index.html
+*.sqlite3
+*.jsonl
+
