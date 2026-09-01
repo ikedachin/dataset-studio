@@ -1,5 +1,7 @@
 # Dataset Studio
 
+[English](README.en.md) | 日本語
+
 Dataset Studioは、LLM・VLMなどの学習データを対象とした、ローカルファーストかつスキーマ非依存のJSONLデータセットエディターです。
 
 JSONLを専用のSQLite作業セッションへ読み込み、任意のネスト構造をブラウザ上で確認・編集できます。元のJSONLは変更せず、編集結果を新しいJSONLとしてエクスポートします。
