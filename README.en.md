@@ -55,13 +55,15 @@ uv run dataset-studio --data-dir /path/to/private/workspace
 | `--no-browser` | Do not open a browser automatically at startup |
 | `--data-dir` | Explicitly specify where the SQLite database and other internal data are stored |
 
-Dataset Studio normally uses `platformdirs` to store its SQLite database and other internal data in the operating system's standard application data directory. This data is not stored in the repository root.
+By default, Dataset Studio stores its SQLite database and other internal data in the current working directory from which it is started. If you run `uv run dataset-studio` from the repository root as shown above, the database is stored at:
 
-Typical locations:
+```text
+./dataset-studio.sqlite3
+```
 
-- macOS: `~/Library/Application Support/Dataset Studio/`
-- Linux: `~/.local/share/Dataset Studio/`
-- Windows: the user's local application data directory
+Because the database uses WAL mode, `dataset-studio.sqlite3-wal` and `dataset-studio.sqlite3-shm` may appear in the same directory while Dataset Studio is running. These database files are excluded from Git.
+
+Starting Dataset Studio from another directory uses that directory as the default storage location. To use a fixed location instead, specify `--data-dir`.
 
 ## Basic Usage
 

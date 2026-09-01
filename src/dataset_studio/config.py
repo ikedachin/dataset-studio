@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from platformdirs import user_data_path
-
 
 @dataclass(slots=True)
 class Settings:
@@ -12,7 +10,7 @@ class Settings:
 
     @classmethod
     def default(cls) -> Settings:
-        return cls(Path(user_data_path("Dataset Studio", "Dataset Studio")))
+        return cls(Path.cwd().resolve())
 
     @property
     def database_path(self) -> Path:

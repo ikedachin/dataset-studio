@@ -55,13 +55,15 @@ uv run dataset-studio --data-dir /path/to/private/workspace
 | `--no-browser` | 起動時にブラウザを自動で開かない |
 | `--data-dir` | SQLite DBなどの保存先を明示的に指定する |
 
-通常、SQLite DBなどの内部データは`platformdirs`を利用してOS標準のApplication Data Directoryへ保存されます。リポジトリ直下には保存されません。
+デフォルトでは、SQLite DBなどの内部データはDataset Studioを起動したカレントディレクトリへ保存されます。上記の手順どおりリポジトリ直下で`uv run dataset-studio`を実行した場合、DBの保存先は次のとおりです。
 
-代表的な保存先:
+```text
+./dataset-studio.sqlite3
+```
 
-- macOS: `~/Library/Application Support/Dataset Studio/`
-- Linux: `~/.local/share/Dataset Studio/`
-- Windows: ユーザーのLocal Application Data Directory
+WALモードで動作するため、起動中は同じ場所に`dataset-studio.sqlite3-wal`と`dataset-studio.sqlite3-shm`が作成されることがあります。これらのDB関連ファイルはGitの管理対象外です。
+
+別のディレクトリから起動すると、そのディレクトリがデフォルトの保存先になります。保存先を固定したい場合は`--data-dir`を指定してください。
 
 ## 基本的な使い方
 
