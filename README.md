@@ -16,7 +16,7 @@ JSONLを専用のSQLite作業セッションへ読み込み、任意のネスト
 - 仮想化Record List、ネストしたscalar値を対象にした全文検索
 - Status Filter、複数のJSON Path Filter、JSON Path Sort
 - 構造化Diff、Record Revert、Soft Delete、Duplicate、Validation
-- ユーザー操作時のみ実行されるManual Sync Rule
+- ユーザー操作時のみ実行されるManual Sync Rule（[設定方法](SYNC_RULES.md)）
 - UTF-8を維持したStreaming DownloadとatomicなローカルパスExport
 - 複数SplitのZIP Export
 - キーボード操作に対応したDark UI
@@ -185,3 +185,7 @@ uv run python scripts/generate_test_dataset.py --records 100000
 ```bash
 uv run python scripts/smoke_large_dataset.py synthetic-100k.jsonl
 ```
+
+## ライセンス
+
+Dataset Studioは[Apache License 2.0](LICENSE)のもとで公開されています。

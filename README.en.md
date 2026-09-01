@@ -16,7 +16,7 @@ It imports JSONL into a dedicated SQLite workspace, where you can inspect and ed
 - Virtualized Record List and full-text search across nested scalar values
 - Status Filter, multiple JSON Path Filters, and JSON Path Sort
 - Structured Diff, Record Revert, Soft Delete, Duplicate, and Validation
-- Manual Sync Rules that run only when explicitly triggered by the user
+- Manual Sync Rules that run only when explicitly triggered by the user ([configuration guide](SYNC_RULES.md#english))
 - Streaming downloads that preserve UTF-8 and atomic exports to local paths
 - ZIP export for multiple splits
 - Dark UI with keyboard navigation
@@ -185,3 +185,7 @@ To test importing, FTS search, and exporting with the generated JSONL file:
 ```bash
 uv run python scripts/smoke_large_dataset.py synthetic-100k.jsonl
 ```
+
+## License
+
+Dataset Studio is licensed under the [Apache License 2.0](LICENSE).
