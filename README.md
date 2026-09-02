@@ -1,4 +1,10 @@
 # Dataset Studio
+## 🚧 Under Construction 🚧
+
+ただいま工事中です！👷‍♂️🔨  
+よりよいプロジェクトを目指して、せっせと作成しています。  
+もうしばらくお待ちください 🛠️✨
+
 
 [English](README.en.md) | 日本語
 
