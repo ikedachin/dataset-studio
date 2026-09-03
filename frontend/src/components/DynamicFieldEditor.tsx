@@ -30,6 +30,7 @@ function AutoGrowingTextarea({
   onChange: (value: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const { fontSize } = usePreferences();
   const resize = useCallback(() => {
     const element = ref.current;
     if (!element) return;
@@ -40,14 +41,32 @@ function AutoGrowingTextarea({
 
   useLayoutEffect(resize, [resize, value]);
   useEffect(() => {
+    const frame = requestAnimationFrame(resize);
+    return () => cancelAnimationFrame(frame);
+  }, [resize, fontSize]);
+  useEffect(() => {
+    const element = ref.current;
+    let previousWidth = element?.clientWidth;
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => {
+      if (element && element.clientWidth !== previousWidth) {
+        previousWidth = element.clientWidth;
+        resize();
+      }
+    });
+    if (element) observer?.observe(element);
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", resize);
+    };
   }, [resize]);
 
   return (
     <textarea
       ref={ref}
-      className="thinking-textarea"
+      className="auto-growing-textarea"
+      rows={1}
+      wrap="soft"
       value={value}
       onChange={(event) => onChange(event.target.value)}
     />
@@ -72,13 +91,6 @@ export function DynamicFieldEditor({
   const { t } = usePreferences();
   const kind = kindOf(value);
   const isThinking = name.toLowerCase() === "thinking";
-  const stat = schema[path];
-  const long =
-    typeof value === "string" &&
-    (value.length > 100 ||
-      value.includes("\n") ||
-      (stat?.max_length ?? 0) > 180 ||
-      (stat?.multiline_ratio ?? 0) > 0.2);
   return (
     <div
       className={`field ${path === "" ? "root-field" : ""} ${isThinking ? "thinking-field" : ""}`}
@@ -101,23 +113,9 @@ export function DynamicFieldEditor({
           </button>
         )}
       </div>
-      {kind === "string" &&
-        (isThinking ? (
-          <AutoGrowingTextarea
-            value={value as string}
-            onChange={onChange}
-          />
-        ) : long ? (
-          <textarea
-            value={value as string}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        ) : (
-          <input
-            value={value as string}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        ))}
+      {kind === "string" && (
+        <AutoGrowingTextarea value={value as string} onChange={onChange} />
+      )}
       {kind === "number" && (
         <input
           type="number"
@@ -453,9 +451,9 @@ export function MessageEditor({
               </button>
             </div>
           </div>
-          <textarea
+          <AutoGrowingTextarea
             value={String(msg.content)}
-            onChange={(e) => update(i, "content", e.target.value)}
+            onChange={(next) => update(i, "content", next)}
           />
           {Object.entries(msg)
             .filter(([k]) => k !== "role" && k !== "content")

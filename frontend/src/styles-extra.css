@@ -105,10 +105,13 @@ body { font-size: calc(16px * var(--font-scale)); }
   scrollbar-gutter: stable;
 }
 .field-column-secondary { border-left: 1px solid var(--border); }
-.thinking-textarea {
-  min-height: 120px;
+.field > textarea.auto-growing-textarea,
+.message textarea.auto-growing-textarea {
+  min-height: 0;
   overflow: hidden;
   resize: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .brand b { font-size: calc(15px * var(--font-scale)); }

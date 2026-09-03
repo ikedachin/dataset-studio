@@ -15,4 +15,23 @@ test('MessageEditor duplicates and deletes messages',()=>{const change=vi.fn();c
 
 test('ArrayEditor supports add, delete, and reorder',()=>{const change=vi.fn();const {rerender}=render(<ArrayEditor value={['a','b']} onChange={change}/>);fireEvent.click(screen.getAllByLabelText('Move down')[0]);expect(change).toHaveBeenCalledWith(['b','a']);fireEvent.click(screen.getByText('Add item'));expect(change).toHaveBeenCalledWith(['a','b','']);rerender(<ArrayEditor value={['a','b']} onChange={change}/>);fireEvent.click(screen.getAllByLabelText('Delete item')[0]);expect(change).toHaveBeenLastCalledWith(['b'])})
 
-test('Top-level records split into two columns and thinking uses an auto-growing textarea',()=>{const {container}=render(<DynamicFieldEditor name="record" path="" value={{id:'1',question:'q',thinking:'full reasoning',answer:'a',metadata:{}}} onChange={()=>{}}/>);expect(container.querySelectorAll('.field-column')).toHaveLength(2);expect(screen.getByDisplayValue('full reasoning')).toHaveClass('thinking-textarea')})
+test('Top-level records split into two columns and strings use auto-growing textareas',()=>{const {container}=render(<DynamicFieldEditor name="record" path="" value={{id:'1',question:'q',thinking:'full reasoning',answer:'a',metadata:{}}} onChange={()=>{}}/>);expect(container.querySelectorAll('.field-column')).toHaveLength(2);for(const value of ['1','q','full reasoning','a']) expect(screen.getByDisplayValue(value)).toHaveClass('auto-growing-textarea')})
+
+test('String fields grow and shrink while preserving multiline values and focus', () => {
+  render(<Harness initial="short" />)
+  const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+  Object.defineProperties(textarea, {
+    scrollHeight: { configurable: true, get: () => textarea.value.length > 100 ? 240 : 24 },
+    offsetHeight: { configurable: true, get: () => 2 },
+    clientHeight: { configurable: true, get: () => 0 },
+  })
+  textarea.focus()
+  const longValue = 'long text '.repeat(30) + '\nsecond line'
+  fireEvent.change(textarea, { target: { value: longValue } })
+  expect(textarea.style.height).toBe('242px')
+  expect(textarea).toHaveFocus()
+  expect(screen.getByRole('status').textContent).toBe(JSON.stringify(longValue))
+  fireEvent.change(textarea, { target: { value: 'short again' } })
+  expect(textarea.style.height).toBe('26px')
+  expect(textarea).toHaveFocus()
+})
