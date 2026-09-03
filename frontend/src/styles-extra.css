@@ -153,6 +153,7 @@ body { font-size: calc(16px * var(--font-scale)); }
 .fold { font-size: calc(11px * var(--font-scale)); }
 .side-content { padding: 16px; }
 .raw-editor textarea { font-size: calc(12px * var(--font-scale)); }
+.raw-editor > .raw-code-editor { display: block; min-width: 0; }
 .modal label,
 .source-cards span,
 .drop-hint,

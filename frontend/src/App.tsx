@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, api } from "./api";
+import { api } from "./api";
 import { DynamicFieldEditor } from "./components/DynamicFieldEditor";
 import { ImportView } from "./components/ImportView";
 import { RecordList } from "./components/RecordList";
@@ -209,31 +209,6 @@ export function App() {
       );
     }
   };
-  const saveToPath = async () => {
-    if (!splitId) return;
-    const path = prompt(
-      t("Save edited JSONL to local path"),
-      `${project?.splits.find((s) => s.id === splitId)?.name ?? "dataset"}_edited.jsonl`,
-    );
-    if (!path) return;
-    try {
-      const result = await api.exportPath(splitId, path);
-      setNotice(
-        `Exported ${result.records.toLocaleString()} records to ${result.path}`,
-      );
-    } catch (e) {
-      if (
-        e instanceof ApiError &&
-        e.status === 409 &&
-        confirm(t("That file exists. Replace it atomically?"))
-      ) {
-        const result = await api.exportPath(splitId, path, true);
-        setNotice(
-          `Exported ${result.records.toLocaleString()} records to ${result.path}`,
-        );
-      } else setNotice(e instanceof Error ? e.message : t("Export failed"));
-    }
-  };
   const navigate = async (direction: number) => {
     if (!list.data || !recordId) return;
     const i = list.data.items.findIndex((x) => x.id === recordId);
@@ -380,7 +355,6 @@ export function App() {
             <option value="local">{t("Local path")}</option>
             <option value="hf">Hugging Face</option>
           </select>
-          <button onClick={() => void saveToPath()}>{t("Save path")}</button>
           <a
             className="button primary"
             href={splitId ? `/api/export/download?split_id=${splitId}` : "#"}

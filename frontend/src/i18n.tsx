@@ -21,7 +21,6 @@ const ja: Record<string, string> = {
   "Other import source": "その他の読み込み元",
   "Import…": "読み込み…",
   "Local path": "ローカルパス",
-  "Save path": "パスへ保存",
   Download: "ダウンロード",
   "JSON path": "JSONパス",
   Value: "値",

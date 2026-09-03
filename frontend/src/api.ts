@@ -114,10 +114,4 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rules, apply }),
     }),
-  exportPath: (split_id: number, path: string, overwrite = false) =>
-    request<{ path: string; records: number }>("/export/path", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ split_id, path, overwrite }),
-    }),
 };
