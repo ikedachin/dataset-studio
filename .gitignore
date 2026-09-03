@@ -11,3 +11,4 @@ frontend/dist/
 *.sqlite3-wal
 *.jsonl
 !dummy_data/*.jsonl
+.DS_Store
