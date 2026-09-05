@@ -28,6 +28,9 @@ export function App() {
   const [splitId, setSplitId] = useState<number>();
   const [recordId, setRecordId] = useState<number>();
   const [draft, setDraft] = useState<JsonObject>();
+  const draftRef = useRef<JsonObject | undefined>(undefined);
+  const draftRecordId = useRef<number | undefined>(undefined);
+  const draftDirty = useRef(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -100,17 +103,26 @@ export function App() {
     enabled: !!recordId,
   });
   useEffect(() => {
-    if (record.data) {
+    if (record.data && record.data.id === recordId) {
+      const switchingRecord = draftRecordId.current !== record.data.id;
+      // Refetches and save acknowledgements must not replace newer edits.
+      if (!switchingRecord && (draftDirty.current || record.data.version < version.current)) return;
+      draftRecordId.current = record.data.id;
+      draftDirty.current = false;
+      draftRef.current = record.data.current_json;
       setDraft(structuredClone(record.data.current_json));
       version.current = record.data.version;
     }
-  }, [record.data]);
+  }, [record.data, recordId]);
   const save = useCallback(
     async (value: JsonObject) => {
       if (!recordId) return;
       const saved = await api.save(recordId, value, version.current);
-      version.current = saved.version;
-      setDraft(structuredClone(saved.current_json));
+      if (draftRecordId.current === recordId) {
+        version.current = saved.version;
+        // Acknowledge only this snapshot; later edits remain authoritative.
+        if (draftRef.current === value) draftDirty.current = false;
+      }
       client.setQueryData(["record", recordId], saved);
       await client.invalidateQueries({ queryKey: ["records", splitId] });
     },
@@ -118,7 +130,7 @@ export function App() {
   );
   const autosave = useAutosave(save);
   const selectRecord = async (id: number) => {
-    await autosave.flush();
+    if (!(await autosave.flush())) return;
     setRecordId(id);
   };
   const diff = useQuery({
@@ -127,6 +139,8 @@ export function App() {
     enabled: !!recordId && autosave.state === "Saved",
   });
   const change = (next: Json) => {
+    draftRef.current = next as JsonObject;
+    draftDirty.current = true;
     setDraft(next as JsonObject);
     autosave.schedule(next as JsonObject);
   };
@@ -220,7 +234,7 @@ export function App() {
       const action = shortcutAction(e);
       if (action) e.preventDefault();
       if (action === "save") void autosave.flush();
-      if (action === "save-next") void autosave.flush().then(() => navigate(1));
+      if (action === "save-next") void autosave.flush().then((saved) => { if (saved) return navigate(1); });
       if (action === "search") searchRef.current?.focus();
       if (action === "previous") void navigate(-1);
       if (action === "next") void navigate(1);
@@ -251,7 +265,7 @@ export function App() {
         projects={projects.data}
         projectId={projectId}
         onProject={async (id) => {
-          await autosave.flush();
+          if (!(await autosave.flush())) return;
           setProjectId(id);
           setRecordId(undefined);
         }}
@@ -262,7 +276,7 @@ export function App() {
             <button
               className={split.id === splitId ? "active" : ""}
               onClick={async () => {
-                await autosave.flush();
+                if (!(await autosave.flush())) return;
                 setSplitId(split.id);
                 setRecordId(undefined);
               }}
@@ -563,7 +577,14 @@ export function App() {
                   </button>
                 </div>
               </div>
-              <div className="editor-scroll">
+              <div
+                className="editor-scroll"
+                onBlur={(event) => {
+                  if (event.target.matches("textarea, input, select")) {
+                    void autosave.flush();
+                  }
+                }}
+              >
                 <DynamicFieldEditor
                   name="record"
                   value={draft}
@@ -650,6 +671,8 @@ export function App() {
           onClose={() => setSyncOpen(false)}
           onApplied={(saved) => {
             version.current = saved.version;
+            draftRef.current = saved.current_json;
+            draftDirty.current = false;
             setDraft(saved.current_json);
             client.setQueryData(["record", saved.id], saved);
             void client.invalidateQueries({ queryKey: ["records", splitId] });
